@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class HotelServiceImpl implements  HotelService {
 
     private final InventoryService inventoryService;
+    private final RoomService roomService;
     private final HotelRepository hotelRepository;
     private final ModelMapper modelMapper;
 
@@ -58,10 +59,12 @@ public class HotelServiceImpl implements  HotelService {
                 .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with ID: "+id));
 
-        hotelRepository.deleteById(id);
+
         for(Room room: hotel.getRooms()) {
-            inventoryService.deleteFutureInventories(room);
+            inventoryService.deleteAllInventories(room);
+            roomService.deleteRoomById(room.getId());
         }
+        hotelRepository.deleteById(id);
 
     }
 

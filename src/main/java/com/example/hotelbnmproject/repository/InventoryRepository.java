@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDate;
 
 public interface InventoryRepository extends JpaRepository<Inventory,Long> {
-    public void deleteByDateAfterAndRoom(LocalDate date, Room room);
+    public void deleteByRoom(Room room);
 }
