@@ -7,11 +7,12 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "hotel")
+@Table(name = "HOTEL")
 public class Hotel {
 
     @Id
@@ -40,5 +41,11 @@ public class Hotel {
 
     @Column(nullable = false)
     private Boolean active;
+
+    @OneToMany(mappedBy = "hotel")
+    private Set<Room> rooms;
+
+    @ManyToOne
+    private User owner;
 
 }
