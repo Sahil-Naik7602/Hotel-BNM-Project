@@ -1,6 +1,8 @@
 package com.example.hotelbnmproject.service;
 
 import com.example.hotelbnmproject.dto.HotelDto;
+import com.example.hotelbnmproject.dto.HotelInfoDto;
+import com.example.hotelbnmproject.dto.RoomDto;
 import com.example.hotelbnmproject.entity.Hotel;
 import com.example.hotelbnmproject.entity.Room;
 import com.example.hotelbnmproject.exception.ResourceNotFoundException;
@@ -10,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Slf4j
@@ -25,8 +29,8 @@ public class HotelServiceImpl implements  HotelService {
     public HotelDto createNewHotel(HotelDto hotelDto) {
         log.info("Inside createNewHotel");
         Hotel hotel = modelMapper.map(hotelDto,Hotel.class);
-        hotelRepository.save(hotel);
         hotel.setActive(false);
+        hotelRepository.save(hotel);
         log.info("Exiting createNewHotel");
         return modelMapper.map(hotel, HotelDto.class);
     }
@@ -81,6 +85,15 @@ public class HotelServiceImpl implements  HotelService {
         for(Room room: hotel.getRooms()) {
             inventoryService.initializeRoomForAYear(room);
         }
+        hotelRepository.save(hotel);
 
+    }
+    @Override
+    public HotelInfoDto getHotelInfoById(Long hotelId) {
+        Hotel hotel = hotelRepository
+                .findById(hotelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with ID: "+hotelId));
+        List<RoomDto> roomsInHotel = hotel.getRooms().stream().map(room -> modelMapper.map(room,RoomDto.class)).toList();
+        return new HotelInfoDto(modelMapper.map(hotel,HotelDto.class),roomsInHotel);
     }
 }

@@ -1,6 +1,7 @@
 package com.example.hotelbnmproject.service;
 
 import com.example.hotelbnmproject.dto.HotelDto;
+import com.example.hotelbnmproject.dto.HotelInfoDto;
 
 public interface HotelService {
 
@@ -13,4 +14,6 @@ public interface HotelService {
     void deleteHotelById(Long id);
 
     void activateHotel(Long hotelId);
+
+    HotelInfoDto getHotelInfoById(Long hotelId);
 }
