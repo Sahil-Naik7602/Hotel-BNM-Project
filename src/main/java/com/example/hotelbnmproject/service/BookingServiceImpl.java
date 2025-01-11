@@ -7,6 +7,7 @@ import com.example.hotelbnmproject.entity.*;
 import com.example.hotelbnmproject.entity.enums.BookingStatus;
 import com.example.hotelbnmproject.exception.ResourceNotFoundException;
 import com.example.hotelbnmproject.repository.*;
+import com.example.hotelbnmproject.strategy.PricingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -28,6 +29,7 @@ public class BookingServiceImpl implements BookingService{
     private final InventoryRepository inventoryRepository;
     private final GuestRepository guestRepository;
     private final ModelMapper modelMapper;
+    private final PricingService pricingService;
 
     @Override
     @Transactional
@@ -48,9 +50,13 @@ public class BookingServiceImpl implements BookingService{
             throw new IllegalStateException("Rooms are not available");
         }
 
+        BigDecimal cost = BigDecimal.ZERO;
+
         //Update the bookedCount for each repository
         for (Inventory inventory:inventoryList){
             inventory.setReservedCount(inventory.getReservedCount() + bookingRequestDto.getRoomsCount());
+            cost = cost.add(pricingService.calculateDynamicPricing(inventory));
+
         }
         inventoryRepository.saveAll(inventoryList);
 
@@ -65,7 +71,7 @@ public class BookingServiceImpl implements BookingService{
                 .checkInDate(bookingRequestDto.getCheckInDate())
                 .checkOutDate(bookingRequestDto.getCheckOutDate())
                 .roomsCount(bookingRequestDto.getRoomsCount())
-                .amount(BigDecimal.TEN) //TODO: update it by Dynamic Amount
+                .amount(cost)
                 .build();
 
         booking = bookingRepository.save(booking);
