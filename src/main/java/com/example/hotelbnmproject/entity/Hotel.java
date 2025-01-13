@@ -45,7 +45,7 @@ public class Hotel {
     @OneToMany(mappedBy = "hotel")
     private Set<Room> rooms;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private User owner;
 
 }

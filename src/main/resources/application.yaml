@@ -19,3 +19,6 @@ server:
   port: 8081
   servlet:
     context-path: "/api/v1"
+
+jwt:
+  secretKey: 'ajksdakjsdhkasjhwe183039487238ykcsdbasjkbdiashe8ex'

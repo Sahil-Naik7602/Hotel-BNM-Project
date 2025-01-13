@@ -6,11 +6,13 @@ import com.example.hotelbnmproject.dto.GuestDto;
 import com.example.hotelbnmproject.entity.*;
 import com.example.hotelbnmproject.entity.enums.BookingStatus;
 import com.example.hotelbnmproject.exception.ResourceNotFoundException;
+import com.example.hotelbnmproject.exception.UnAuthorizeException;
 import com.example.hotelbnmproject.repository.*;
 import com.example.hotelbnmproject.strategy.PricingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,6 +89,11 @@ public class BookingServiceImpl implements BookingService{
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(() ->
                 new ResourceNotFoundException("Booking not found with id: "+bookingId));
 
+        User loggedInUser = getCurrentUser();
+        if (!loggedInUser.equals(booking.getUser())){
+            throw new UnAuthorizeException("Booking doesn't belong to user with id: "+loggedInUser.getId());
+        }
+
         if (hasBookingExpired(booking)) {
             throw new IllegalStateException("Booking has already expired");
         }
@@ -112,9 +119,6 @@ public class BookingServiceImpl implements BookingService{
     }
 
     private User getCurrentUser() {
-        //TODO: get this from SecurityContextHolder during authentication
-        User user = new User();
-        user.setId(1L); // TODO: REMOVE DUMMY USER
-        return user;
+        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 }
