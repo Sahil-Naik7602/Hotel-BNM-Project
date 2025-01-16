@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Service
+
 @RequiredArgsConstructor
 public class HolidayPricingStrategy implements PricingStrategy{
     private final PricingStrategy wrappedOn;

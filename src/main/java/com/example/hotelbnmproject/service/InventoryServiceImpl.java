@@ -1,10 +1,12 @@
 package com.example.hotelbnmproject.service;
 
 import com.example.hotelbnmproject.dto.HotelDto;
+import com.example.hotelbnmproject.dto.HotelPriceDto;
 import com.example.hotelbnmproject.dto.HotelSearchDto;
 import com.example.hotelbnmproject.entity.Hotel;
 import com.example.hotelbnmproject.entity.Inventory;
 import com.example.hotelbnmproject.entity.Room;
+import com.example.hotelbnmproject.repository.HotelMinPriceRepository;
 import com.example.hotelbnmproject.repository.HotelRepository;
 import com.example.hotelbnmproject.repository.InventoryRepository;
 import com.example.hotelbnmproject.repository.RoomRepository;
@@ -27,7 +29,7 @@ public class InventoryServiceImpl implements InventoryService{
 
     private final InventoryRepository inventoryRepository;
     private final ModelMapper modelMapper;
-    private final HotelRepository hotelRepository;
+    private final HotelMinPriceRepository hotelMinPriceRepository;
     private final RoomRepository roomRepository;
 
 
@@ -62,20 +64,28 @@ public class InventoryServiceImpl implements InventoryService{
     }
 
     @Override
-    public Page<HotelDto> searchHotels(HotelSearchDto hotelSearchDto) {
+    public Page<HotelPriceDto> searchHotels(HotelSearchDto hotelSearchDto) {
         log.info("Inside searchHotels for city: "+hotelSearchDto.getCity()
                 +" for date between "+hotelSearchDto.getStartDate()+" - "+hotelSearchDto.getEndDate());
         Pageable pageable = PageRequest.of(hotelSearchDto.getPageNumber(), hotelSearchDto.getSize());
         Long dateCount = ChronoUnit.DAYS.between(hotelSearchDto.getStartDate(),hotelSearchDto.getEndDate())+1;
         log.info("dateCount: "+dateCount);
-        Page<Hotel> page =inventoryRepository.getAllValidInventoriesForDtRange(
+
+        Page<HotelPriceDto> page = hotelMinPriceRepository.getAllValidInventoriesForDtRange(
+                hotelSearchDto.getCity(),
+                hotelSearchDto.getStartDate(),
+                hotelSearchDto.getEndDate(),
+                pageable);
+
+        /*Page<Hotel> page =inventoryRepository.getAllValidInventoriesForDtRange(
                 hotelSearchDto.getCity(),
                 hotelSearchDto.getStartDate(),
                 hotelSearchDto.getEndDate(),
                 hotelSearchDto.getRoomsCount(),
                 dateCount,
                 pageable );
+         */
 
-        return page.map(hotel -> modelMapper.map(hotel,HotelDto.class));
+        return page.map(hotel -> modelMapper.map(hotel,HotelPriceDto.class));
     }
 }
