@@ -106,9 +106,9 @@ public class HotelServiceImpl implements  HotelService {
         hotel.setActive(true);
 
         // assuming only do it once
-        for(Room room: hotel.getRooms()) {
-            inventoryService.initializeRoomForAYear(room);
-        }
+//        for(Room room: hotel.getRooms()) {
+//            inventoryService.initializeRoomForAYear(room);
+//        }
         hotelRepository.save(hotel);
 
     }

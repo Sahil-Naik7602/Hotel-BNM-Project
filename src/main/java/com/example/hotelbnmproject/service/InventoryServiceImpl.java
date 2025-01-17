@@ -49,6 +49,7 @@ public class InventoryServiceImpl implements InventoryService{
                     .price(room.getBasePrice())
                     .closed(false)
                     .bookedCount(0)
+                    .reservedCount(0)
                     .build();
 
             today = today.plusDays(1);

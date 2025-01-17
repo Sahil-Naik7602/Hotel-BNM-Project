@@ -36,7 +36,7 @@ public class PricingUpdateService {
 
     //Scheduler to update the inventory and HotelMinPrice table every hour
 
-    @Scheduled(cron = "*/5 * * * * *")
+    @Scheduled(cron = "0 */2 * * * *")
     public void updatePrices(){
         int page = 0;
         int batchSize = 100;

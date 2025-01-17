@@ -6,19 +6,23 @@ import com.example.hotelbnmproject.dto.SignUpRequestDto;
 import com.example.hotelbnmproject.dto.UserDto;
 import com.example.hotelbnmproject.entity.User;
 import com.example.hotelbnmproject.entity.enums.Role;
+import com.example.hotelbnmproject.exception.ResourceNotFoundException;
 import com.example.hotelbnmproject.repository.UserRepository;
 import com.example.hotelbnmproject.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AuthService {
     private final UserRepository userRepository;
@@ -63,4 +67,12 @@ public class AuthService {
         return new LoginResponseDto(accessToken);
     }
 
+    public UserDto assignHotelManager(Long id) {
+        User user = userRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("User not found for ID: "+id));
+        Set<Role> roles = user.getRoles();
+        roles.add(Role.HOTEL_MANAGER);
+        user.setRoles(roles);
+        userRepository.save(user);
+        return modelMapper.map(user,UserDto.class);
+    }
 }

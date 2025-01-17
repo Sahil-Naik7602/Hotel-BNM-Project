@@ -11,9 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationServiceException;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 
@@ -24,13 +22,13 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/signUp")
-    public ResponseEntity<UserDto> signUp(SignUpRequestDto signUpRequestDto){
+    public ResponseEntity<UserDto> signUp(@RequestBody SignUpRequestDto signUpRequestDto){
         UserDto userDto = authService.signUp(signUpRequestDto);
         return ResponseEntity.ok(userDto);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> signUp(LoginRequestDto loginRequestDto, HttpServletResponse response){
+    public ResponseEntity<LoginResponseDto> signUp(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response){
         String[] tokens = authService.login(loginRequestDto);
 
         Cookie cookie = new Cookie("refreshToken",tokens[1]);
@@ -51,6 +49,12 @@ public class AuthController {
         LoginResponseDto responseDto = authService.refresh(refreshToken);
 
         return ResponseEntity.ok(responseDto);
+    }
+
+    @PostMapping("/assignHotelManager/{id}")
+    public ResponseEntity<UserDto> assignHotelManager(@PathVariable Long  id){
+        UserDto userDto = authService.assignHotelManager(id);
+        return ResponseEntity.ok(userDto);
     }
 
 
