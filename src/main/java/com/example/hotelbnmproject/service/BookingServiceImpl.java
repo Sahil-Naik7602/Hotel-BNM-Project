@@ -12,6 +12,7 @@ import com.example.hotelbnmproject.strategy.PricingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,13 +26,19 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService{
+
+    @Value("${frontend:url}")
+    private String frontendUrl;
+
     private final BookingRepository bookingRepository;
     private final HotelRepository hotelRepository;
     private final RoomRepository roomRepository;
     private final InventoryRepository inventoryRepository;
     private final GuestRepository guestRepository;
     private final ModelMapper modelMapper;
+
     private final PricingService pricingService;
+    private final CheckoutService checkoutService;
 
     @Override
     @Transactional
@@ -112,6 +119,32 @@ public class BookingServiceImpl implements BookingService{
         booking.setBookingStatus(BookingStatus.GUEST_ADDED);
         booking = bookingRepository.save(booking);
         return modelMapper.map(booking, BookingDto.class);
+    }
+
+    @Override
+    @Transactional
+    public String initiatePayment(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: "+bookingId));
+
+        User loggedInUser = getCurrentUser();
+        if (!loggedInUser.equals(booking.getUser())){
+            throw new UnAuthorizeException("Booking doesn't belong to user with id: "+loggedInUser.getId());
+        }
+
+        if (hasBookingExpired(booking)) {
+            throw new IllegalStateException("Booking has already expired");
+        }
+        if(booking.getBookingStatus() != BookingStatus.GUEST_ADDED) {
+            throw new IllegalStateException("Booking is not under GUEST_ADDED state, cannot initiate payments");
+        }
+        String successUrl = frontendUrl+"/payment/success";
+        String failureUrl = "/payment/failure";
+        String sessionUrl  = checkoutService.getCheckoutSession(booking, successUrl,failureUrl);
+
+        booking.setBookingStatus(BookingStatus.PAYMENTS_PENDING);
+        bookingRepository.save(booking);
+        return sessionUrl;
     }
 
     public boolean hasBookingExpired(Booking booking) {

@@ -17,4 +17,6 @@ public interface BookingService {
 
     @Transactional
     BookingDto addGuests(Long bookingId, List<GuestDto> guestDtoList);
+
+    String initiatePayment(Long bookingId);
 }

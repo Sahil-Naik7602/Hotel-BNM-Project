@@ -22,3 +22,10 @@ server:
 
 jwt:
   secretKey: 'ajksdakjsdhkasjhwe183039487238ykcsdbasjkbdiashe8ex'
+
+frontend:
+  url: "http://localhost:8081/api/v1"
+
+stripe:
+  secret:
+    key:'sk_test_51Qia74IBAVMV3lK9namQr6ApyoujaPYPmh5BYTmam0EGClx0scz0TbxSF4EzUHQeVaCTwgXDUiAbF3hf7UxvUfPA00XtN0xCqZ'
