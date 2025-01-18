@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -49,6 +50,42 @@ public interface InventoryRepository extends JpaRepository<Inventory,Long> {
             @Param("roomId") Long roomId,
             @Param("checkInDt") LocalDate checkInDt,
             @Param("checkOutDt") LocalDate checkOutDt,
+            @Param("roomCount") Integer roomCount
+    );
+
+    @Query("""
+            SELECT i
+            FROM Inventory  i
+            WHERE i.room.id = :roomId AND
+                  i.date BETWEEN :startDate AND :endDate AND
+                  i.closed = false AND
+                  (i.totalCount-i.bookedCount) >= :roomCount
+            """)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    public List<Inventory> findAndLockReservedInventory(
+            @Param("roomId") Long roomId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("roomCount") Integer roomCount
+    );
+
+
+    //need to apply a lock before modifying the reserved count because it might get inconsistent
+    @Modifying
+    @Query("""
+            UPDATE Inventory i
+            SET  i.reservedCount = i.reservedCount - :roomCount,
+                 i.bookedCount = i.bookedCount + :roomCount
+            WHERE i.room.id = :roomId AND
+                  i.date BETWEEN :startDate AND :endDate AND
+                  i.reservedCount >= :roomCount AND
+                  i.closed = false
+            """)
+
+    public List<Inventory> confirmBooking(
+            @Param("roomId") Long roomId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
             @Param("roomCount") Integer roomCount
     );
 

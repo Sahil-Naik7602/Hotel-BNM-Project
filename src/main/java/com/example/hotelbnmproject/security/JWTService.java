@@ -16,7 +16,7 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class JWTService {
 
-    @Value("${jwt.secretkey}")
+    @Value("${jwt.secretKey}")
     private String jwtSecretKey;
 
     private SecretKey generateSecretKey(){

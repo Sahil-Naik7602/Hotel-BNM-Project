@@ -9,6 +9,8 @@ import com.example.hotelbnmproject.exception.ResourceNotFoundException;
 import com.example.hotelbnmproject.exception.UnAuthorizeException;
 import com.example.hotelbnmproject.repository.*;
 import com.example.hotelbnmproject.strategy.PricingService;
+import com.stripe.model.Event;
+import com.stripe.model.checkout.Session;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -145,6 +147,33 @@ public class BookingServiceImpl implements BookingService{
         booking.setBookingStatus(BookingStatus.PAYMENTS_PENDING);
         bookingRepository.save(booking);
         return sessionUrl;
+    }
+
+    @Override
+    @Transactional
+    public void capturePayment(Event event) {
+        if ("checkout.session.completed".equals(event.getType())){
+            Session session = (Session) event.getDataObjectDeserializer().getObject().orElse(null);
+            if (session == null) return;
+
+            String sessionId = session.getId();
+            Booking booking = bookingRepository.findByPaymentSessionId(sessionId).orElseThrow(
+                    ()-> new ResourceNotFoundException("Booking not found for paymentSessionId: "+sessionId)
+            );
+
+            booking.setBookingStatus(BookingStatus.CONFIRMED);
+            bookingRepository.save(booking);
+
+            inventoryRepository.findAndLockReservedInventory(booking.getRoom().getId(),booking.getCheckInDate(),booking.getCheckOutDate(), booking.getRoomsCount());
+
+            inventoryRepository.confirmBooking(booking.getRoom().getId(),booking.getCheckInDate(),booking.getCheckOutDate(), booking.getRoomsCount());
+
+            log.info("Successfully confirmed the booking for Booking ID: {}",booking.getId());
+
+        }else{
+            log.info("Unhandled event type: {}",event.getType());
+        }
+
     }
 
     public boolean hasBookingExpired(Booking booking) {
