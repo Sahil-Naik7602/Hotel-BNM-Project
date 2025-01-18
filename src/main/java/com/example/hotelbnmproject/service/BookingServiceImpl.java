@@ -80,7 +80,7 @@ public class BookingServiceImpl implements BookingService{
                 .checkInDate(bookingRequestDto.getCheckInDate())
                 .checkOutDate(bookingRequestDto.getCheckOutDate())
                 .roomsCount(bookingRequestDto.getRoomsCount())
-                .amount(cost)
+                .amount(cost.multiply(BigDecimal.valueOf(bookingRequestDto.getRoomsCount())))
                 .build();
 
         booking = bookingRepository.save(booking);
