@@ -27,7 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService{
 
-    @Value("${frontend:url}")
+    @Value("${frontend.url}")
     private String frontendUrl;
 
     private final BookingRepository bookingRepository;
@@ -139,7 +139,7 @@ public class BookingServiceImpl implements BookingService{
             throw new IllegalStateException("Booking is not under GUEST_ADDED state, cannot initiate payments");
         }
         String successUrl = frontendUrl+"/payment/success";
-        String failureUrl = "/payment/failure";
+        String failureUrl = frontendUrl+"/payment/failure";
         String sessionUrl  = checkoutService.getCheckoutSession(booking, successUrl,failureUrl);
 
         booking.setBookingStatus(BookingStatus.PAYMENTS_PENDING);
