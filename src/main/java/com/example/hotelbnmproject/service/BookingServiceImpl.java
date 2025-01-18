@@ -9,8 +9,11 @@ import com.example.hotelbnmproject.exception.ResourceNotFoundException;
 import com.example.hotelbnmproject.exception.UnAuthorizeException;
 import com.example.hotelbnmproject.repository.*;
 import com.example.hotelbnmproject.strategy.PricingService;
+import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
+import com.stripe.model.Refund;
 import com.stripe.model.checkout.Session;
+import com.stripe.param.RefundCreateParams;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -173,6 +176,42 @@ public class BookingServiceImpl implements BookingService{
         }else{
             log.info("Unhandled event type: {}",event.getType());
         }
+
+    }
+
+    @Override
+    @Transactional
+    public void cancelBooking(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: "+bookingId));
+
+        User loggedInUser = getCurrentUser();
+        if (!loggedInUser.equals(booking.getUser())){
+            throw new UnAuthorizeException("Booking doesn't belong to user with id: "+loggedInUser.getId());
+        }
+        if(booking.getBookingStatus() != BookingStatus.RESERVED) {
+            throw new IllegalStateException("Only CONFIRMED bookings can be cancelled");
+        }
+
+        booking.setBookingStatus(BookingStatus.CANCELLED);
+        bookingRepository.save(booking);
+
+        inventoryRepository.findAndLockReservedInventory(booking.getRoom().getId(),booking.getCheckInDate(),booking.getCheckOutDate(), booking.getRoomsCount());
+
+        inventoryRepository.cancelBooking(booking.getRoom().getId(),booking.getCheckInDate(),booking.getCheckOutDate(), booking.getRoomsCount());
+
+        //Handle the refund
+
+        try {
+            Session session = Session.retrieve(booking.getPaymentSessionId());
+            RefundCreateParams refundParams = RefundCreateParams.builder()
+                    .setPaymentIntent(session.getPaymentIntent())
+                    .build();
+            Refund.create(refundParams);
+        } catch (StripeException e) {
+            throw new RuntimeException(e);
+        }
+
 
     }
 
